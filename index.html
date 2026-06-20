@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Performance & Accessibility Audit — thepatientscompass.com</title>
+  <style>
+    :root {
+      --green: #16a34a;
+      --orange: #ea580c;
+      --red: #dc2626;
+      --blue: #2563eb;
+      --bg: #f8f9fa;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --muted: #64748b;
+      --accent: #0f172a;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+      color: #fff;
+      padding: 48px 24px 40px;
+      text-align: center;
+    }
+    header .badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      margin-bottom: 16px;
+      color: #93c5fd;
+    }
+    header h1 {
+      font-size: clamp(22px, 4vw, 36px);
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+    header p {
+      font-size: 15px;
+      color: #94a3b8;
+      max-width: 560px;
+      margin: 0 auto 20px;
+    }
+    header .meta {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      font-size: 13px;
+      color: #cbd5e1;
+    }
+    header .meta span { display: flex; align-items: center; gap: 6px; }
+
+    /* ── Educational banner ── */
+    .edu-banner {
+      background: #fef3c7;
+      border-bottom: 2px solid #f59e0b;
+      text-align: center;
+      padding: 10px 24px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #92400e;
+    }
+
+    /* ── Layout ── */
+    .container { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+    main { padding: 48px 0 80px; }
+
+    /* ── Score Cards ── */
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+    .score-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 16px;
+      text-align: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      transition: transform 0.15s;
+    }
+    .score-card:hover { transform: translateY(-2px); }
+    .score-card .score-num {
+      font-size: 42px;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .score-card .score-label { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .score-card .score-status { font-size: 11px; margin-top: 6px; font-weight: 600; border-radius: 999px; display: inline-block; padding: 2px 10px; }
+    .good .score-num { color: var(--green); }
+    .good .score-status { background: #dcfce7; color: #15803d; }
+    .warn .score-num { color: var(--orange); }
+    .warn .score-status { background: #ffedd5; color: #c2410c; }
+    .poor .score-num { color: var(--red); }
+    .poor .score-status { background: #fee2e2; color: #b91c1c; }
+
+    /* ── Metrics Table ── */
+    .section { margin-bottom: 48px; }
+    .section-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title .icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .icon-perf { background: #fff7ed; }
+    .icon-access { background: #eff6ff; }
+    .icon-bp { background: #f0fdf4; }
+    .icon-fix { background: #fdf4ff; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead tr { background: #f1f5f9; }
+    th { text-align: left; padding: 10px 14px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+    td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+
+    .pill {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .pill-green { background: #dcfce7; color: #15803d; }
+    .pill-orange { background: #ffedd5; color: #c2410c; }
+    .pill-red { background: #fee2e2; color: #b91c1c; }
+
+    .metric-val { font-size: 18px; font-weight: 800; }
+    .metric-val.red { color: var(--red); }
+    .metric-val.orange { color: var(--orange); }
+    .metric-val.green { color: var(--green); }
+
+    /* ── Fix Cards ── */
+    .fix-list { display: flex; flex-direction: column; gap: 20px; }
+    .fix-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .fix-card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .fix-priority {
+      flex-shrink: 0;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      font-weight: 900;
+      color: #fff;
+    }
+    .p-red { background: var(--red); }
+    .p-orange { background: var(--orange); }
+    .p-yellow { background: #ca8a04; }
+    .p-green { background: var(--green); }
+
+    .fix-card-header h3 { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
+    .fix-card-header p { font-size: 13px; color: var(--muted); }
+    .fix-card-body { padding: 18px 20px; }
+    .fix-card-body p { font-size: 14px; margin-bottom: 12px; color: #334155; }
+
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 10px;
+      padding: 16px 18px;
+      font-size: 12.5px;
+      line-height: 1.7;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+    code { font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace; }
+    .comment { color: #64748b; }
+    .tag { color: #7dd3fc; }
+    .attr { color: #86efac; }
+    .val { color: #fde68a; }
+    .kw { color: #c084fc; }
+
+    .file-ref {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+      font-family: monospace;
+      margin-bottom: 10px;
+    }
+
+    .effort-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-left: 8px;
+    }
+    .effort-vlow { background: #dcfce7; color: #15803d; }
+    .effort-low { background: #dbeafe; color: #1d4ed8; }
+    .effort-med { background: #fef9c3; color: #854d0e; }
+
+    /* ── Insight Cards ── */
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .insight-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .insight-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .insight-card .saving { font-size: 20px; font-weight: 900; color: var(--orange); }
+    .insight-card p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+    /* ── Priority Table ── */
+    .priority-row td:first-child { font-weight: 700; }
+
+    /* ── Footer ── */
+    footer {
+      background: #0f172a;
+      color: #64748b;
+      text-align: center;
+      padding: 28px 24px;
+      font-size: 13px;
+    }
+    footer strong { color: #94a3b8; }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .score-grid { grid-template-columns: repeat(2, 1fr); }
+      pre { font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="edu-banner">⚠ Educational Content Only — Not Medical Advice</div>
+
+<header>
+  <div class="badge">PageSpeed Insights Audit</div>
+  <h1>Performance &amp; Accessibility Report</h1>
+  <p>thepatientscompass.com — Mobile Analysis</p>
+  <div class="meta">
+    <span>📅 June 19, 2026</span>
+    <span>📱 Mobile (Moto G Power emulation)</span>
+    <span>🌐 Slow 4G throttling</span>
+    <span>🔦 Lighthouse 13.4.0</span>
+  </div>
+</header>
+
+<main>
+<div class="container">
+
+  <!-- ── Category Scores ── -->
+  <div class="section" style="margin-top:40px;">
+    <div class="section-title">
+      <span class="icon icon-perf">📊</span> Overall Scores
+    </div>
+    <div class="score-grid">
+      <div class="score-card warn">
+        <div class="score-num">54</div>
+        <div class="score-label">Performance</div>
+        <div class="score-status">Needs Improvement</div>
+      </div>
+      <div class="score-card warn">
+        <div class="score-num">75</div>
+        <div class="score-label">Accessibility</div>
+        <div class="score-status">Needs Improvement</div>
+      </div>
+      <div class="score-card good">
+        <div class="score-num">96</div>
+        <div class="score-label">Best Practices</div>
+        <div class="score-status">Good</div>
+      </div>
+      <div class="score-card good">
+        <div class="score-num">100</div>
+        <div class="score-label">SEO</div>
+        <div class="score-status">Good</div>
+      </div>
+      <div class="score-card poor">
+        <div class="score-num" style="font-size:32px;">1/3</div>
+        <div class="score-label">Agentic Browsing</div>
+        <div class="score-status">Poor</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Core Web Vitals ── -->
+  <div class="section">
+    <div class="section-title">
+      <span class="icon icon-perf">⚡</span> Core Web Vitals &amp; Metrics
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Value</th>
+          <th>Threshold</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>First Contentful Paint (FCP)</strong><br><span style="font-size:12px;color:#64748b">Time until first content is painted</span></td>
+          <td><span class="metric-val red">7.8 s</span></td>
+          <td>Good &lt; 1.8 s</td>
+          <td><span class="pill pill-red">Poor</span></td>
+        </tr>
+        <tr>
+          <td><strong>Largest Contentful Paint (LCP)</strong><br><span style="font-size:12px;color:#64748b">Time until largest visible element loads</span></td>
+          <td><span class="metric-val red">13.1 s</span></td>
+          <td>Good &lt; 2.5 s</td>
+          <td><span class="pill pill-red">Poor</span></td>
+        </tr>
+        <tr>
+          <td><strong>Total Blocking Time (TBT)</strong><br><span style="font-size:12px;color:#64748b">Time main thread is blocked from input</span></td>
+          <td><span class="metric-val orange">190 ms</span></td>
+          <td>Good &lt; 150 ms</td>
+          <td><span class="pill pill-orange">Needs Improvement</span></td>
+        </tr>
+        <tr>
+          <td><strong>Cumulative Layout Shift (CLS)</strong><br><span style="font-size:12px;color:#64748b">Visual stability of page elements</span></td>
+          <td><span class="metric-val green">0</span></td>
+          <td>Good &lt; 0.1</td>
+          <td><span class="pill pill-green">Good</span></td>
+        </tr>
+        <tr>
+          <td><strong>Speed Index (SI)</strong><br><span style="font-size:12px;color:#64748b">How quickly content is visually populated</span></td>
+          <td><span class="metric-val red">7.8 s</span></td>
+          <td>Good &lt; 3.4 s</td>
+          <td><span class="pill pill-red">Poor</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Performance Opportunities ── -->
+  <div class="section">
+    <div class="section-title">
+      <span class="icon icon-perf">🚀</span> Performance Opportunities
+    </div>
+    <div class="insight-grid">
+      <div class="insight-card">
+        <h4>Render-Blocking Requests</h4>
+        <div class="saving">−980 ms</div>
+        <p>Main CSS, Apple Sign-In JS, and Google Fonts are blocking the initial render. Defer or inline these resources.</p>
+      </div>
+      <div class="insight-card">
+        <h4>Improve Image Delivery</h4>
+        <div class="saving">−170 KiB</div>
+        <p>Three hero images are oversized for their displayed dimensions. Serve responsive images with correct <code>srcset</code>.</p>
+      </div>
+      <div class="insight-card">
+        <h4>Cache Lifetimes</h4>
+        <div class="saving">−236 KiB</div>
+        <p>CloudFront images have no cache TTL set. Add long-lived <code>Cache-Control</code> headers to avoid repeat downloads.</p>
+      </div>
+      <div class="insight-card">
+        <h4>Reduce Unused JavaScript</h4>
+        <div class="saving">−977 KiB</div>
+        <p>Nearly 1 MB of unused JS is shipped. Implement code splitting so only the code needed for the current route is loaded.</p>
+      </div>
+      <div class="insight-card">
+        <h4>Main-Thread Work</h4>
+        <div class="saving">2.3 s blocked</div>
+        <p>12 long tasks detected. Forced reflows in <code>index-B3SrkFqB.js</code> and <code>script.js</code> (Plausible) are key contributors.</p>
+      </div>
+      <div class="insight-card">
+        <h4>LCP Image Not Prioritised</h4>
+        <div class="saving">Critical</div>
+        <p>The Wellness Background hero image is the LCP element but lacks <code>fetchpriority="high"</code>. Add it immediately.</p>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>Resource</th><th>Issue</th><th>Est. Saving</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>/assets/index-K-SiJaVK.css</code> (32.8 KiB)</td>
+          <td>Render-blocking — 900 ms</td>
+          <td>~900 ms</td>
+        </tr>
+        <tr>
+          <td><code>appleid.cdn-apple.com/…/appleid.js</code></td>
+          <td>Render-blocking + 404 error</td>
+          <td>~750 ms</td>
+        </tr>
+        <tr>
+          <td><code>fonts.googleapis.com/css2?family=…</code></td>
+          <td>Render-blocking Google Fonts CSS</td>
+          <td>~750 ms</td>
+        </tr>
+        <tr>
+          <td><code>wellness_….webp</code> (144 KiB, 1248×1248px)</td>
+          <td>Displayed at much smaller size; no cache TTL</td>
+          <td>91 KiB</td>
+        </tr>
+        <tr>
+          <td><code>medical-assistant-avatar-….webp</code> (47 KiB)</td>
+          <td>1248×1248 served, displayed at 322×322</td>
+          <td>44 KiB</td>
+        </tr>
+        <tr>
+          <td><code>compass_w….webp</code> (44 KiB)</td>
+          <td>1248×1248 served, displayed at 578×578</td>
+          <td>35 KiB</td>
+        </tr>
+        <tr>
+          <td><code>/assets/index-B3SrkFqB.js</code> (913 KiB)</td>
+          <td>Unused JS + no source map + forced reflow</td>
+          <td>977 KiB</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Accessibility Fixes ── -->
+  <div class="section">
+    <div class="section-title">
+      <span class="icon icon-access">♿</span> Accessibility Fixes (Score: 75 → Target 95+)
+    </div>
+    <div class="fix-list">
+
+      <!-- Fix 1 -->
+      <div class="fix-card">
+        <div class="fix-card-header">
+          <div class="fix-priority p-red">1</div>
+          <div>
+            <h3>Remove <code>maximum-scale=1</code> from Viewport <span class="effort-tag effort-vlow">Very Easy</span></h3>
+            <p>Disables pinch-to-zoom for users with low vision — violates WCAG 2.1 SC 1.4.4</p>
+          </div>
+        </div>
+        <div class="fix-card-body">
+          <span class="file-ref">📄 client/src/components/SEO.tsx:49</span>
+          <pre><code><span class="comment">{/* ❌ Before */}</span>
+<span class="tag">&lt;meta</span> <span class="attr">name</span>=<span class="val">"viewport"</span> <span class="attr">content</span>=<span class="val">"width=device-width, initial-scale=1.0, maximum-scale=1"</span> <span class="tag">/&gt;</span>
+
+<span class="comment">{/* ✅ After — simply remove maximum-scale */}</span>
+<span class="tag">&lt;meta</span> <span class="attr">name</span>=<span class="val">"viewport"</span> <span class="attr">content</span>=<span class="val">"width=device-width, initial-scale=1.0"</span> <span class="tag">/&gt;</span></code></pre>
+        </div>
+      </div>
+
+      <!-- Fix 2 -->
+      <div class="fix-card">
+        <div class="fix-card-header">
+          <div class="fix-priority p-red">2</div>
+          <div>
+            <h3>Add <code>aria-label</code> to Social Media Links <span class="effort-tag effort-vlow">Very Easy</span></h3>
+            <p>5 footer icon-only links are announced as blank by screen readers</p>
+          </div>
+        </div>
+        <div class="fix-card-body">
+          <span class="file-ref">📄 client/src/pages/Home.tsx:1886–1898</span>
+          <pre><code><span class="comment">{/* ❌ Before — icon only, no accessible name */}</span>
+<span class="tag">&lt;a</span> <span class="attr">href</span>=<span class="val">"https://facebook.com/thepatientscompass"</span>
+   <span class="attr">target</span>=<span class="val">"_blank"</span> <span class="attr">rel</span>=<span class="val">"noopener noreferrer"</span>
+   <span class="attr">className</span>=<span class="val">"text-[#9E9A90] hover:text-[#7E9A85]"</span>&gt;
+  <span class="comment">{/* SVG icon */}</span>
+<span class="tag">&lt;/a&gt;</span>
+
+<span class="comment">{/* ✅ After — add aria-label to all 5 links */}</span>
+<span class="tag">&lt;a</span> <span class="attr">href</span>=<span class="val">"https://facebook.com/thepatientscompass"</span>
+   <span class="attr">target</span>=<span class="val">"_blank"</span> <span class="attr">rel</span>=<span class="val">"noopener noreferrer"</span>
+   <span class="attr">aria-label</span>=<span class="val">"Follow The Patient's Compass on Facebook (opens in new tab)"</span>
+   <span class="attr">className</span>=<span class="val">"text-[#9E9A90] hover:text-[#7E9A85]"</span>&gt;
+  <span class="comment">{/* SVG icon */}</span>
+<span class="tag">&lt;/a&gt;</span>
+<span class="comment">{/* Repeat for Twitter/X, Instagram, LinkedIn, YouTube */}</span></code></pre>
+        </div>
+      </div>
+
+      <!-- Fix 3 -->
+      <div class="fix-card">
+        <div class="fix-card-header">
+          <div class="fix-priority p-orange">3</div>
+          <div>
+            <h3>Add Label to Biomarker <code>&lt;select&gt;</code> Dropdowns <span class="effort-tag effort-low">Easy</span></h3>
+            <p>Select elements have no associated label — screen readers cannot identify their purpose</p>
+          </div>
+        </div>
+        <div class="fix-card-body">
+          <span class="file-ref">📄 client/src/pages/Home.tsx:1223</span>
+          <pre><code><span class="comment">{/* ❌ Before */}</span>
+<span class="tag">&lt;select</span> <span class="attr">className</span>=<span class="val">"w-full p-3 rounded-xl border border-[#EBE6DC]..."</span>&gt;
+  <span class="tag">&lt;option&gt;</span>Ferritin (Iron Storage)<span class="tag">&lt;/option&gt;</span>
+  ...
+<span class="tag">&lt;/select&gt;</span>
+
+<span class="comment">{/* ✅ After — use aria-labelledby pointing to existing h3 at line 1159 */}</span>
+<span class="tag">&lt;h3</span> <span class="attr">id</span>=<span class="val">"biomarker-heading"</span> <span class="attr">className</span>=<span class="val">"text-xs font-bold text-[#7E9A85]..."</span>&gt;
+  SELECT A BIOMARKER TO ANALYZE:
+<span class="tag">&lt;/h3&gt;</span>
+<span class="tag">&lt;select</span>
+  <span class="attr">aria-labelledby</span>=<span class="val">"biomarker-heading"</span>
+  <span class="attr">className</span>=<span class="val">"w-full p-3 rounded-xl border border-[#EBE6DC]..."</span>&gt;
+  ...
+<span class="tag">&lt;/select&gt;</span></code></pre>
+        </div>
+      </div>
+
+      <!-- Fix 4 -->
+      <div class="fix-card">
+        <div class="fix-card-header">
+          <div class="fix-priority p-orange">4</div>
+          <div>
+            <h3>Add Label to Ferritin Range Slider <span class="effort-tag effort-low">Easy</span></h3>
+            <p>Range input at line 1110 has no label — value and purpose are invisible to screen readers</p>
+          </div>
+        </div>
+        <div class="fix-card-body">
+          <span class="file-ref">📄 client/src/pages/Home.tsx:1110</span>
+          <pre><code><span class="comment">{/* ❌ Before */}</span>
+<span class="tag">&lt;input</span> <span class="attr">type</span>=<span class="val">"range"</span> <span class="attr">min</span>=<span class="val">"5"</span> <span class="attr">max</span>=<span class="val">"160"</span> <span class="attr">value</span>=<span class="val">"35"</span>
+  <span class="attr">className</span>=<span class="val">"w-full h-2 bg-[#EBE6DC]..."</span> <span class="tag">/&gt;</span>
+
+<span class="comment">{/* ✅ After */}</span>
+<span class="tag">&lt;label</span> <span class="attr">htmlFor</span>=<span class="val">"ferritin-slider"</span> <span class="attr">className</span>=<span class="val">"sr-only"</span>&gt;
+  Ferritin value (ng/mL)
+<span class="tag">&lt;/label&gt;</span>
+<span class="tag">&lt;input</span>
+  <span class="attr">id</span>=<span class="val">"ferritin-slider"</span>
+  <span class="attr">type</span>=<span class="val">"range"</span> <span class="attr">min</span>=<span class="val">"5"</span> <span class="attr">max</span>=<span class="val">"160"</span>
+  <span class="attr">aria-valuemin</span>=<span class="val">{5}</span> <span class="attr">aria-valuemax</span>=<span class="val">{160}</span>
+  <span class="attr">aria-valuenow</span>=<span class="val">{ferritinValue}</span>
+  <span class="attr">aria-valuetext</span>=<span class="val">{`${ferritinValue} ng/mL`}</span>
+  <span class="attr">className</span>=<span class="val">"w-full h-2 bg-[#EBE6DC]..."</span>
+<span class="tag">/&gt;</span></code></pre>
+        </div>
+      </div>
+
+      <!-- Fix 5 -->
+      <div class="fix-card">
+        <div class="fix-card-header">
+          <div class="fix-priority p-orange">5</div>
+          <div>
+            <h3>Add <code>&lt;main&gt;</code> Landmark <span class="effort-tag effort-low">Easy</span></h3>
+            <p>No main landmark exists — screen reader users cannot skip navigation to reach primary content</p>
+          </div>
+        </div>
+        <div class="fix-card-body">
+          <span class="file-ref">📄 client/src/pages/Home.tsx (top-level wrapper)</span>
+          <pre><code><span class="comment">{/* ✅ Wrap all content between header and footer in &lt;main&gt; */}</span>
+<span class="tag">&lt;div</span> <span class="attr">className</span>=<span class="val">"min-h-screen bg-[#F9F6F0]..."</span>&gt;
+  <span class="tag">&lt;header</span> <span class="attr">...</span><span class="tag">&gt;</span>...<span class="tag">&lt;/header&gt;</span>
+
+  <span class="tag">&lt;main</span> <span class="attr">id</span>=<span class="val">"main-content"</span><span class="tag">&gt;</span>
+    <span class="comment">{/* all page sections */}</span>
+  <span class="tag">&lt;/main&gt;</span>
+
+  <span class="tag">&lt;footer</span> <span class="attr">...</span><span class="tag">&gt;</span>...<span class="tag">&lt;/footer&gt;</span>
+<span class="tag">&lt;/div&gt;</span>
+
+<span class="comment">{/* Optional: skip link for keyboard users */}</span>
+<span class="tag">&lt;a</span> <span class="attr">href</span>=<span class="val">"#main-content"</span>
+   <span class="attr">className</span>=<span class="val">"sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-white px-4 py-2 rounded z-[9999]"</span>&gt;
+  Skip to main content
+<span class="tag">&lt;/a&gt;</span></code></pre>
+        </div>
+      </div>
+
+      <!-- Fix 6 -->
+      <div class="fix-card">
+        <div class="fix-card-header">
+          <div class="fix-priority p-yellow">6</div>
+          <div>
+            <h3>Fix Color Contrast Failures <span class="effort-tag effort-med">Medium</span></h3>
+            <p>Multiple text/background combinations fail WCAG AA (4.5:1 for normal text)</p>
+          </div>
+        </div>
+        <div class="fix-card-body">
+          <table>
+            <thead><tr><th>Element</th><th>Current</th><th>Background</th><th>Ratio</th><th>Fix</th></tr></thead>
+            <tbody>
+              <tr><td><code>text-amber-600</code> in banner</td><td>#D97706</td><td>#FFFBEB</td><td>~2.9:1 ❌</td><td>Use <code>text-amber-800</code> (#92400E)</td></tr>
+              <tr><td>White on <code>#7E9A85</code> banner</td><td>#FFFFFF</td><td>#7E9A85</td><td>~3.1:1 ❌</td><td>Darken bg to <code>#5C7A63</code></td></tr>
+              <tr><td><code>text-[#7E9A85]</code> on <code>#F9F6F0</code></td><td>#7E9A85</td><td>#F9F6F0</td><td>~3.0:1 ❌</td><td>Use <code>#4A6B52</code></td></tr>
+              <tr><td><code>text-[#9E9A90]</code> small text</td><td>#9E9A90</td><td>#FFFFFF</td><td>~2.5:1 ❌</td><td>Use <code>#6B6762</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Best Practices ── -->
+  <div class="section">
+    <div class="section-title">
+      <span class="icon icon-bp">🛡️</span> Best Practices Issues (Score: 96)
+    </div>
+    <div class="fix-list">
+
+      <div class="fix-card">
+        <div class="fix-card-header">
+          <div class="fix-priority p-red">!</div>
+          <div>
+            <h3>17 Blog Images Returning 403 Forbidden <span class="effort-tag effort-low">Easy</span></h3>
+            <p>Pre-signed CloudFront URLs have expired — causing console errors and broken images</p>
+          </div>
+        </div>
+        <div class="fix-card-body">
+          <p>All blog post thumbnail images on <code>d36hbw14aib5lz.cloudfront.net</code> are returning <strong>HTTP 403 Forbidden</strong>. The <code>?Expires=…&amp;Signature=…</code> query parameters indicate these are time-limited signed URLs that have now expired.</p>
+          <p><strong>Recommended fix:</strong> For public blog images, remove the signed URL requirement. Make the S3/CloudFront objects publicly accessible and remove the <code>?Expires&amp;Signature</code> parameters from the image URLs. This also eliminates the cache TTL issue since permanent public URLs can receive long-lived <code>Cache-Control</code> headers.</p>
+          <pre><code><span class="comment">// ❌ Expired signed URL (403)</span>
+https://d36hbw14aib5lz.cloudfront.net/…/sonya_por….jfif?Expires=178…&amp;Signature=…
+
+<span class="comment">// ✅ Public permanent URL (no expiry)</span>
+https://d36hbw14aib5lz.cloudfront.net/…/sonya_por….jfif</code></pre>
+        </div>
+      </div>
+
+      <div class="fix-card">
+        <div class="fix-card-header">
+          <div class="fix-priority p-orange">!</div>
+          <div>
+            <h3>Apple Sign-In Script Returns 404 <span class="effort-tag effort-vlow">Very Easy</span></h3>
+            <p><code>appleid.cdn-apple.com/…/appleid.js</code> — file not found, also a render-blocking request</p>
+          </div>
+        </div>
+        <div class="fix-card-body">
+          <p>The Apple Sign-In SDK URL is incorrect or outdated. Update to the current Apple-documented URL, or remove the script entirely if Apple Sign-In is not actively used (which also removes a render-blocking request).</p>
+          <pre><code><span class="comment">{/* ❌ 404 — incorrect path */}</span>
+<span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="val">"https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid.js"</span><span class="tag">&gt;&lt;/script&gt;</span>
+
+<span class="comment">{/* ✅ Correct Apple SDK URL */}</span>
+<span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="val">"https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"</span><span class="tag">&gt;&lt;/script&gt;</span></code></pre>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Priority Table ── -->
+  <div class="section">
+    <div class="section-title">
+      <span class="icon icon-fix">📋</span> Implementation Priority Order
+    </div>
+    <table>
+      <thead>
+        <tr><th>#</th><th>Fix</th><th>Score Impact</th><th>Effort</th></tr>
+      </thead>
+      <tbody class="priority-row">
+        <tr><td>🔴 1</td><td>Fix 403 errors on blog images</td><td>Best Practices ↑</td><td><span class="pill pill-green">Very Low</span></td></tr>
+        <tr><td>🔴 2</td><td>Remove <code>maximum-scale=1</code></td><td>Accessibility ↑</td><td><span class="pill pill-green">Very Low</span></td></tr>
+        <tr><td>🔴 3</td><td>Add <code>aria-label</code> to 5 social links</td><td>Accessibility ↑</td><td><span class="pill pill-green">Very Low</span></td></tr>
+        <tr><td>🔴 4</td><td>Fix/remove Apple Sign-In 404</td><td>Best Practices ↑ + Performance ↑</td><td><span class="pill pill-green">Very Low</span></td></tr>
+        <tr><td>🟠 5</td><td>Add <code>fetchpriority="high"</code> to LCP image</td><td>Performance ↑ (LCP)</td><td><span class="pill pill-green">Very Low</span></td></tr>
+        <tr><td>🟠 6</td><td>Add labels to <code>&lt;select&gt;</code> elements</td><td>Accessibility ↑</td><td><span class="pill pill-green">Low</span></td></tr>
+        <tr><td>🟠 7</td><td>Add label to range slider</td><td>Accessibility ↑</td><td><span class="pill pill-green">Low</span></td></tr>
+        <tr><td>🟠 8</td><td>Add <code>&lt;main&gt;</code> landmark</td><td>Accessibility ↑</td><td><span class="pill pill-green">Low</span></td></tr>
+        <tr><td>🟠 9</td><td>Defer CSS &amp; third-party JS</td><td>Performance ↑ (FCP/LCP)</td><td><span class="pill pill-orange">Medium</span></td></tr>
+        <tr><td>🟡 10</td><td>Fix color contrast failures</td><td>Accessibility ↑</td><td><span class="pill pill-orange">Medium</span></td></tr>
+        <tr><td>🟡 11</td><td>Serve responsive images with <code>srcset</code></td><td>Performance ↑ (LCP)</td><td><span class="pill pill-orange">Medium</span></td></tr>
+        <tr><td>🟡 12</td><td>Fix heading order</td><td>Accessibility ↑</td><td><span class="pill pill-orange">Medium</span></td></tr>
+        <tr><td>🟢 13</td><td>Implement code splitting (JS bundles)</td><td>Performance ↑ (TBT/FCP)</td><td><span class="pill pill-red">High</span></td></tr>
+        <tr><td>🟢 14</td><td>Set CloudFront <code>Cache-Control</code> headers</td><td>Repeat visit speed ↑</td><td><span class="pill pill-green">Low</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+</main>
+
+<footer>
+  <strong>thepatientscompass.com — Mobile Performance &amp; Accessibility Audit</strong><br>
+  Generated June 19, 2026 · Lighthouse 13.4.0 · Prepared by Manus AI<br><br>
+  <span style="color:#475569;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">EDUCATIONAL CONTENT ONLY</span>
+</footer>
+
+</body>
+</html>
